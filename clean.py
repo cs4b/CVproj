@@ -2,8 +2,14 @@ import os
 import glob
 import shutil
 import re
+from tqdm import tqdm
 
-base_dirs = ['Part1_1', 'Part1_2', 'Part2_1', 'Part2_2', 'Part3_1', 'Part3_2']
+base_dirs = [r'Part1_1', r'Part1_2', r'Part2_1', r'Part2_2', r'Part3_1', r'Part3_2']
+
+for base_dir in base_dirs:
+    print(f'Checking base directory {base_dir}')
+    if not os.path.isdir(base_dir):
+        raise ValueError(f'Base directory {base_dir} does not exist')
 
 pattern = r"\d_\d+_pose_\d+_thermal.png"
 gt_pattern = r"\d_\d+_GT_pose_\d+_thermal.png"
@@ -17,7 +23,7 @@ os.makedirs(output_dir, exist_ok=True)
 with open('complete_sets.txt', 'w') as complete_set_file, \
         open('incomplete_sets.txt', 'w') as incomplete_set_file, \
         open('summary.txt', 'w') as summary_file:
-    for base_dir in base_dirs:
+    for base_dir in tqdm(base_dirs):
         files = glob.glob(os.path.join(base_dir, "*")) #these are all the files in the directory
 
         groups = {} # create groups based on the patterns
@@ -39,8 +45,8 @@ with open('complete_sets.txt', 'w') as complete_set_file, \
                     complete_set_file.write(file + '\n')
                 #This below is the copy (2 lines), so uncomment it, when you are sure everything is right..
                 #otherwise it copies 45GBs every runtime.
-                #for file in group:
-                #    shutil.copy(file, os.path.join(output_dir, os.path.basename(file)))
+                for file in group:
+                   shutil.copy(file, os.path.join(output_dir, os.path.basename(file)))
                 complete_sets.append(group)
             else:
                 #incomplete log
