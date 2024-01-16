@@ -15,7 +15,7 @@ if gpus:
         for gpu in gpus:
             tf.config.experimental.set_virtual_device_configuration(
                 gpu,
-                [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=15000)]
+                [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=18000)]
             )
     except RuntimeError as e:
         print(e)
@@ -74,10 +74,22 @@ def load_samples(image_paths, label_paths, num_samples):
 
     return np.array(images_normalized), np.array(binary_mask)
 
+def read_and_normalize_images(folder_path):
+    normalized_images = []
+
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.png'):
+            image_path = os.path.join(folder_path, filename)
+            img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            normalized_img = img.astype('float32') / 255.0
+            normalized_images.append(normalized_img)
+
+    return np.array(normalized_images)
+
 def unet_model(input_shape):
     inputs = Input(shape=input_shape)
 
-    # Encoder
+    # Contracting
     conv1 = layers.Conv2D(32, 3, activation=None, padding='same', kernel_initializer='he_normal')(inputs)
     conv1 = layers.BatchNormalization()(conv1)
     conv1 = layers.Activation('relu')(conv1)
@@ -102,7 +114,7 @@ def unet_model(input_shape):
     conv3 = layers.BatchNormalization()(conv3)
     conv3 = layers.Activation('relu')(conv3)
 
-    # Decoder
+    # Expansive
     up4 = layers.UpSampling2D(size=(2, 2))(conv3)
     concat4 = layers.concatenate([conv2, up4], axis=-1)
     conv4 = layers.Conv2D(64, 3, activation=None, padding='same', kernel_initializer='he_normal')(concat4)
@@ -166,6 +178,25 @@ def visualize_predictions(model, xv, yv):
 
     plt.show()
 
+
+def visualize_predictions_outside(unet_model, images):
+
+    predictions = unet_model.predict(images)
+    num_images = min(len(images), 12)
+    fig, axes = plt.subplots(num_images, 2, figsize=(10, 2 * num_images))
+
+    for i in range(4):
+        axes[i, 0].imshow(images[i], cmap='gray')
+        axes[i, 0].set_title('Original Image')
+        axes[i, 0].axis('off')
+
+        axes[i, 1].imshow(predictions[i, :, :, 0], cmap='gray')
+        axes[i, 1].set_title('Predicted Image')
+        axes[i, 1].axis('off')
+
+    plt.tight_layout()
+    plt.show()
+
 input_shape = (512,512,1)
 unet = unet_model(input_shape)
 
@@ -178,11 +209,15 @@ lr_schedule = ExponentialDecay(
 opt = Adam(learning_rate=0.001 ,clipvalue=1.0)
 unet.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
 
-num_samples = 700 #Specify the number of samples you want to use for training
+num_samples = 6000 #Specify the number of samples you want to use for training
 images, labels = load_samples(image_paths, label_paths, num_samples)
 X_train, X_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=42)
-unet.fit(X_train, y_train, batch_size=16, epochs=25, validation_data=(X_val, y_val)) #epochs
+unet.fit(X_train, y_train, batch_size=5, epochs=10, validation_data=(X_val, y_val)) #epochs
 unet.save('D:\proj\model')
-#loaded_model = tf.keras.models.load_model('path_to_save_model')
+#loaded_model = tf.keras.models.load_model('path_to_save_model')s
 #predictions = loaded_model.predict(input_data)
-visualize_predictions(unet,X_val,y_val)
+
+path = r"D:\proj\real_integrals"
+real_integrals = read_and_normalize_images(path)
+visualize_predictions_outside(unet,real_integrals)
+
