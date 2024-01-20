@@ -74,6 +74,7 @@ def load_samples(image_paths, label_paths, num_samples):
 
     return np.array(images_normalized), np.array(binary_mask)
 
+#This is needed for the testing
 def read_and_normalize_images(folder_path):
     normalized_images = []
 
