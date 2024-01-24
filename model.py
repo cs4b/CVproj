@@ -9,6 +9,9 @@ from keras.layers import Input
 from keras import layers, models
 #from tensorflow.keras.optimizers.schedules import ExponentialDecay
 import matplotlib.pyplot as plt
+from keras.models import load_model
+import random
+
 
 class DataLoader:
     def __init__(self, image_dir, label_dir):
@@ -22,10 +25,10 @@ class DataLoader:
         for dir in os.listdir(image_dir):
             image_subdir = os.path.join(image_dir, dir)
             if os.path.isdir(image_subdir):  # Check if it's a directory
-                # Take only the first image file in the directory
+                # Take only the one image file from samples the directory
                 image_files = [f for f in os.listdir(image_subdir) if os.path.isfile(os.path.join(image_subdir, f))]
                 if image_files:  # Check if there are any files in the directory
-                    image_path = os.path.join(image_subdir, image_files[0])
+                    image_path = os.path.join(image_subdir, image_files[random.randint(0,3)])
                     self.image_paths.append(image_path)
 
                     id = dir.replace("integrals_", "")
@@ -54,7 +57,7 @@ class DataLoader:
 
         images_normalized = [image / 255.0 for image in images]
         labels_normalized = [label / 255.0 for label in labels]
-        threshold = 0.88
+        threshold = 0.9
         binary_mask = tf.where(np.array(labels_normalized) > threshold, 1, 0)
 
         return np.array(images_normalized), np.array(binary_mask)
@@ -141,8 +144,13 @@ class UNetModel:
 
     def save_model(self, save_path):
         self.model.save(save_path)
+        #tf.keras.models.save_model(self,r'D:\proj\keras_saved_model')
 
-    def visualize_predictions(self, xv):
+    def load_model(self,path):
+        loaded_model = load_model(path)
+        self.model.set_weights(loaded_model.get_weights())
+        return loaded_model
+    def visualize_predictions(self, xv, yv, num):
         """
         Visualizes the input image, ground truth, and model predictions.
 
@@ -156,7 +164,7 @@ class UNetModel:
 
         random_index = np.random.randint(0, len(xv))
         # Reshape the input image to match the model's input shape
-        input_image = np.reshape(xv[5], (1, 512, 512, 1))  # Adjust the shape if needed
+        input_image = np.reshape(xv[num-1], (1, 512, 512, 1))  # Adjust the shape if needed
 
         # Make a prediction using the model
         predictions = self.model.predict(input_image)
@@ -164,18 +172,18 @@ class UNetModel:
         # Assuming predictions and ground truth are in the range [0, 1]
         # Reshape predictions and ground truth if necessary
         predictions = np.reshape(predictions, (512, 512))
-        #ground_truth = np.reshape(yv[5], (512, 512))
+        ground_truth = np.reshape(yv[num-1], (512, 512))
 
         # Visualize the input image, ground truth, and predictions
         plt.figure(figsize=(12, 4))
 
         plt.subplot(1, 3, 1)
-        plt.title(input_image)
+        plt.title('Input_image')
         plt.imshow(input_image[0, :, :, 0], cmap='gray')
 
-        #plt.subplot(1, 3, 2)
-        #plt.title('Ground Truth')
-        #plt.imshow(ground_truth, cmap='gray')
+        plt.subplot(1, 3, 2)
+        plt.title('Ground Truth')
+        plt.imshow(ground_truth, cmap='gray')
 
         plt.subplot(1, 3, 3)
         plt.title('Model Prediction')
@@ -186,17 +194,18 @@ class UNetModel:
     def visualize_predictions_outside(self, images):
         predictions = self.model.predict(images)
         num_images = min(len(images), 12)
-        fig, axes = plt.subplots(num_images, 2, figsize=(10, 2 * num_images))
+        #fig, axes = plt.subplots(num_images, 2, figsize=(10, 2 * num_images))
+        fig, axes = plt.subplots(2, num_images, figsize=(2 * num_images, 5))
 
         #range specifies how many integral images we visualise from the real_integrals directory
-        for i in range(4):
-            axes[i, 0].imshow(images[i], cmap='gray')
-            axes[i, 0].set_title('Original Image')
-            axes[i, 0].axis('off')
+        for i in range(12):
+            axes[0, i].imshow(images[i], cmap='gray')
+            axes[0, i].set_title('Original Image')
+            axes[0, i].axis('off')
 
-            axes[i, 1].imshow(predictions[i, :, :, 0], cmap='gray')
-            axes[i, 1].set_title('Predicted Image')
-            axes[i, 1].axis('off')
+            axes[1, i].imshow(predictions[i, :, :, 0], cmap='gray')
+            axes[1, i].set_title('Predicted Image')
+            axes[1, i].axis('off')
 
         plt.tight_layout()
         plt.show()
@@ -204,6 +213,9 @@ class Trainer:
     def __init__(self, data_loader, unet_model):
         self.data_loader = data_loader
         self.unet_model = unet_model
+        self.train_loss_history = []
+        self.val_loss_history = []
+
         gpus = tf.config.experimental.list_physical_devices('GPU')
         if gpus:
             try:
@@ -219,7 +231,26 @@ class Trainer:
         images, labels = self.data_loader.load_samples(num_samples)
         X_train, X_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=42)
         self.unet_model.train(X_train, y_train, X_val, y_val, epochs=epochs, batch_size=batch_size)
+        '''
+        for epoch in range(epochs):
+            history = self.unet_model.model.fit(X_train, y_train, batch_size=batch_size, epochs=1,
+                                                validation_data=(X_val, y_val))
+
+            # Append the training and validation loss to the history
+            self.train_loss_history.append(history.history['loss'][0])
+            self.val_loss_history.append(history.history['val_loss'][0])
+
+            # Plot the training and validation loss
+        self.plot_loss()
         self.unet_model.save_model('D:\proj\model')
+        '''
+    def plot_loss(self):
+        plt.plot(self.train_loss_history, label='Training Loss')
+        plt.plot(self.val_loss_history, label='Validation Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend()
+        plt.show()
 
 class Tester:
     def __init__(self, unet_model, data_loader):
@@ -230,23 +261,42 @@ class Tester:
         real_integrals = self.data_loader.read_and_normalize_images(test_path)
         self.unet_model.visualize_predictions_outside(real_integrals)
 
+    def test_model_focal(self, num):
+        images, label = self.data_loader.load_samples(num)
+        self.unet_model.visualize_predictions(images,label,num)
+
+
+
 if __name__ == "__main__":
     image_dir = 'D:\proj\separated\integraltest\integrals'
     label_dir = 'D:\proj\separated\GT'
 
     # Create instances of DataLoader, UNetModel, Trainer, and Tester
     data_loader = DataLoader(image_dir, label_dir)
+    '''
     input_shape = (512, 512, 1)
     unet_model = UNetModel(input_shape)
     trainer = Trainer(data_loader, unet_model)
     tester = Tester(unet_model, data_loader)
 
     # Train the model
-    trainer.train_model(num_samples=3000, epochs=10, batch_size=5)
+    trainer.train_model(num_samples=3000, epochs=10, batch_size=6)
+    #trainer.plot_loss()
 
     #Save the model
     unet_model.save_model('D:\proj\model_separated')
 
+    '''#Load model
+    model_path = r"D:\proj\model_separated"
+    input_shape = (512, 512, 1)
+    unet_model = UNetModel(input_shape)
+    unet_model.load_model(model_path)
+    tester = Tester(unet_model, data_loader)
+
     # Test the model
     test_path = r"D:\proj\real_integrals"
     tester.test_model(test_path)
+    #tester.test_model_focal(16)
+
+    for i in range(120,125,1):
+        tester.test_model_focal(i)

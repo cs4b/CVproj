@@ -152,7 +152,7 @@ def visualize_predictions(model, xv, yv):
     """
     random_index = np.random.randint(0, len(xv))
     # Reshape the input image to match the model's input shape
-    input_image = np.reshape(xv[5], (1, 512, 512, 1))  # Adjust the shape if needed
+    input_image = np.reshape(xv[14], (1, 512, 512, 1))  # Adjust the shape if needed
 
     # Make a prediction using the model
     predictions = model.predict(input_image)
@@ -160,7 +160,7 @@ def visualize_predictions(model, xv, yv):
     # Assuming predictions and ground truth are in the range [0, 1]
     # Reshape predictions and ground truth if necessary
     predictions = np.reshape(predictions, (512, 512))
-    ground_truth = np.reshape(yv[5], (512, 512))
+    ground_truth = np.reshape(yv[14], (512, 512))
 
     # Visualize the input image, ground truth, and predictions
     plt.figure(figsize=(12, 4))
@@ -210,7 +210,7 @@ lr_schedule = ExponentialDecay(
 opt = Adam(learning_rate=0.001 ,clipvalue=1.0)
 unet.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
 
-num_samples = 6000 #Specify the number of samples you want to use for training
+num_samples = 2500 #Specify the number of samples you want to use for training
 images, labels = load_samples(image_paths, label_paths, num_samples)
 X_train, X_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=42)
 unet.fit(X_train, y_train, batch_size=5, epochs=10, validation_data=(X_val, y_val)) #epochs
@@ -218,7 +218,8 @@ unet.save('D:\proj\model')
 #loaded_model = tf.keras.models.load_model('path_to_save_model')s
 #predictions = loaded_model.predict(input_data)
 
-path = r"D:\proj\real_integrals"
-real_integrals = read_and_normalize_images(path)
-visualize_predictions_outside(unet,real_integrals)
+#path = r"D:\proj\real_integrals"
+#real_integrals = read_and_normalize_images(path)
+#visualize_predictions_outside(unet,real_integrals)
+visualize_predictions(unet,images,labels)
 
