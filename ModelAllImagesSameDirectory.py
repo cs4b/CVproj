@@ -22,29 +22,30 @@ if gpus:
         print(e)
 
 
-data_dir = r'F:\CvDataset\Dataset\Integrals_Cleaned'
+data_dir = r'D:\proj\to_train'
 image_paths = []
 label_paths = []
 
 image_files = [f for f in os.listdir(data_dir) if f.endswith('.png')]
 print("total simulations: ", len(image_files) / 5)
 for i in range(0, len(image_files), 5):
+    label_path = os.path.join(data_dir, image_files[i])
     if i + 4 >= len(image_files):
         print(f"Index out of range: i={i}, i+4={i + 4}, len(image_files)={len(image_files)}")
         continue
     # Take the first four images as input and the fifth as label
-    input_images = [os.path.join(data_dir, image_files[i + j]) for j in range(4)]
-    label_path = os.path.join(data_dir, image_files[i + 4])
+    input_images = [os.path.join(data_dir, image_files[i+1 + j]) for j in range(4)]
+    #label_path = os.path.join(data_dir, image_files[i + 4])
 
     image_paths.append(input_images)
     label_paths.append(label_path)
-
-'''for i in range(min(5, len(image_paths))):
+'''
+for i in range(min(5, len(image_paths))):
     print(f"Input Images {i+1}: {image_paths[i]}")
     print(f"Label Path {i+1}: {label_paths[i]}")
-    print()'''
+    print()
 
-'''num_samples_to_visualize = min(5, len(image_paths))
+num_samples_to_visualize = min(5, len(image_paths))
 
 for i in range(num_samples_to_visualize):
     input_images_sample = [cv2.imread(image_path, cv2.IMREAD_GRAYSCALE) for image_path in image_paths[i]]
@@ -53,16 +54,18 @@ for i in range(num_samples_to_visualize):
 
     # Visualize the input images, concatenated image, and label
     plt.figure(figsize=(16, 4))
-    for j in range(4):
-        plt.subplot(1, 5, j + 1)
-        plt.title(f'Input Image {j + 1}')
-        plt.imshow(input_images_sample[j], cmap='gray')
-        plt.axis('off')
+
 
     plt.subplot(1, 5, 5)
     plt.title('Concatenated Image & Label')
     plt.imshow(np.hstack((concatenated_image_sample, label_sample)), cmap='gray')
     plt.axis('off')
+
+    for j in range(4):
+        plt.subplot(1, 5, j + 1)
+        plt.title(f'Input Image {j + 1}')
+        plt.imshow(input_images_sample[j], cmap='gray')
+        plt.axis('off')
 
     plt.show()
 '''
@@ -153,16 +156,16 @@ def unet_model(input_shape):
 input_shape = (512,512,1)
 unet = unet_model(input_shape)
 
-initial_learning_rate = 0.0001
+initial_learning_rate = 0.01
 lr_schedule = ExponentialDecay(
-    initial_learning_rate, decay_steps=10000, decay_rate=0.9, staircase=True
+    initial_learning_rate, decay_steps=10000, decay_rate=0.9, staircase=False
 )
 
-opt = Adam(learning_rate=0.0001 ,clipvalue=1.0)
+opt = Adam(learning_rate=lr_schedule, clipvalue=1.0)
 unet.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
 
-num_samples = 3000  #Specify the number of samples you want to use for training
+num_samples = 1700  #Specify the number of samples you want to use for training
 images, labels = load_samples(image_paths, label_paths, num_samples)
-X_train, X_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=30)
-unet.fit(X_train, y_train, batch_size=5, epochs=15, validation_data=(X_val, y_val)) #epochs
+X_train, X_val, y_train, y_val = train_test_split(images, labels, test_size=0.05, random_state=30)
+unet.fit(X_train, y_train, batch_size=8, epochs=50, validation_data=(X_val, y_val)) #epochs
 unet.save('F:\CvDataset\Dataset\modelNEW')

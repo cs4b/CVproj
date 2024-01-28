@@ -25,8 +25,8 @@ def copy_images_from_subdirectories(src_folder_postfix, src_folder_files, dest_f
                 print(f"File not found in {src_folder_files}: {image_filename}")
 
 # Example usage:
-src_folder_postfix = "D:\integrals_half"  # Folder for postfix extraction
-src_folder_files = "F:\CvDataset\Dataset\Seperated_Folders\GT"      # Folder containing files to match
-dest_folder = "D:\integrals_half\half_dataset"
+src_folder_postfix = "D:\proj\separated\integraltest\integrals"  # Folder for postfix extraction
+src_folder_files = "D:\proj\separated\GT"      # Folder containing files to match
+dest_folder = r"D:\proj\to_train"
 
 copy_images_from_subdirectories(src_folder_postfix, src_folder_files, dest_folder)

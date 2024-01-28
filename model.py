@@ -73,6 +73,8 @@ class DataLoader:
                 normalized_images.append(normalized_img)
 
         return np.array(normalized_images)
+
+
 class UNetModel:
     def __init__(self, input_shape):
         self.model = self.build_unet_model(input_shape)
@@ -144,7 +146,6 @@ class UNetModel:
 
     def save_model(self, save_path):
         self.model.save(save_path)
-        #tf.keras.models.save_model(self,r'D:\proj\keras_saved_model')
 
     def load_model(self,path):
         loaded_model = load_model(path)
@@ -193,12 +194,12 @@ class UNetModel:
 
     def visualize_predictions_outside(self, images):
         predictions = self.model.predict(images)
-        num_images = min(len(images), 12)
+        num_images = (len(images))
         #fig, axes = plt.subplots(num_images, 2, figsize=(10, 2 * num_images))
         fig, axes = plt.subplots(2, num_images, figsize=(2 * num_images, 5))
 
         #range specifies how many integral images we visualise from the real_integrals directory
-        for i in range(12):
+        for i in range(len(images)):
             axes[0, i].imshow(images[i], cmap='gray')
             axes[0, i].set_title('Original Image')
             axes[0, i].axis('off')
@@ -265,15 +266,16 @@ class Tester:
         images, label = self.data_loader.load_samples(num)
         self.unet_model.visualize_predictions(images,label,num)
 
-
+    #Not used
+    def test_singular(self,num):
+        image, label = self.data_loader.load_samples(num)
+        self.unet_model.visualize_predictions()
 
 if __name__ == "__main__":
     image_dir = 'D:\proj\separated\integraltest\integrals'
     label_dir = 'D:\proj\separated\GT'
 
-    # Create instances of DataLoader, UNetModel, Trainer, and Tester
     data_loader = DataLoader(image_dir, label_dir)
-    '''
     input_shape = (512, 512, 1)
     unet_model = UNetModel(input_shape)
     trainer = Trainer(data_loader, unet_model)
@@ -281,22 +283,18 @@ if __name__ == "__main__":
 
     # Train the model
     trainer.train_model(num_samples=3000, epochs=10, batch_size=6)
-    #trainer.plot_loss()
 
     #Save the model
     unet_model.save_model('D:\proj\model_separated')
 
-    '''#Load model
-    model_path = r"D:\proj\model_separated"
-    input_shape = (512, 512, 1)
-    unet_model = UNetModel(input_shape)
-    unet_model.load_model(model_path)
-    tester = Tester(unet_model, data_loader)
-
+    # The tester class can be used from here, because the DataLoader is already instantiated,
+    # but the test.py is better written from general prediction
+    '''
     # Test the model
-    test_path = r"D:\proj\real_integrals"
+    test_path = r"D:\proj\to_train\testfolder"
     tester.test_model(test_path)
     #tester.test_model_focal(16)
 
-    for i in range(120,125,1):
-        tester.test_model_focal(i)
+    #for i in range(461,475,1):
+    #    tester.test_model_focal(i)
+    '''
