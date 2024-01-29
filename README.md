@@ -7,7 +7,14 @@ Pytorch >= 2.0
 Tensorflow >= 2.10.0 
 keras >= 2.10.0 	
 
+# Results Folder
+	Link to the results folder : https://drive.proton.me/urls/DBTGR3RV8G#k4i8csv6I69K
 
+ 	Contains:
+  		Sample Training Set
+    		Sample Test Set 
+      		Test Set Results
+      			Also with the results of Real Integrals 
 # classes
 
 model.py
