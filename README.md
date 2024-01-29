@@ -8,13 +8,12 @@ Tensorflow >= 2.10.0
 keras >= 2.10.0 	
 
 # Results Folder
-	Link to the results folder : https://drive.proton.me/urls/DBTGR3RV8G#k4i8csv6I69K
+Link to the results folder : https://drive.proton.me/urls/DBTGR3RV8G#k4i8csv6I69K
 
- 	Contains:
-  		Sample Training Set
-    		Sample Test Set 
-      		Test Set Results
-      			Also with the results of Real Integrals 
+Contains:
+	Sample Training Set
+ 	Sample Test Set 
+  	Test Set Results - Also with the results of Real Integrals 
 # classes
 
 model.py
@@ -30,8 +29,8 @@ model.py
 		Set the GPU to be used, and parametrising the unet training in order to save train_loss history and val_loss history. Due to the complexity of the network in order to log the history more memory is needed, which means lowering sample number, which in return would dampen the training efficiency. Unfortunately we cannot use it due to resource deficiency.
   
 	Main: 
-	image_dir = The directory where the integral images are that are used for training.
-	label_dir = The ground_truth library. The class can make groups of 4 focal images(focal stack) and the corresponding ground truth.
+		image_dir = The directory where the integral images are that are used for training.
+		label_dir = The ground_truth library. The class can make groups of 4 focal images(focal stack) and the corresponding ground truth.
 
 Test.py
 	This file contains two essential functions that has been pulled from the tester class to easily visualise and save predictions. Two visualise functions: visualize_predictions_outside() does not save the predictions, visualize_predictions_and_save() saves them.
