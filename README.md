@@ -24,7 +24,8 @@ model.py
 		Loads and processes (binary masking, normalization) input data.
   
 	UNetModel class:
-		This is the model. All the related (pre-written)functions are defined in order to be able to parametrise training. The visualisation functions are not used in the test script because they need the custom UNetModel to be loaded, which requrires the Dataloader to be loaded, that in its constructor loads all the samples. It is not very well written.
+		This is the model. All the related (pre-written)functions are defined in order to be able to parametrise training. The visualisation functions are not used in the test script because they need the custom UNetModel to be loaded, which requrires the Dataloader to be loaded, that in its constructor loads all the samples. So for that reason it is best not to instatiate Dataloader just for visualisation.
+		Also the model has a static method fos psrn_metric
   
 	Trainer class:
 		Set the GPU to be used, and parametrising the unet training in order to save train_loss history and val_loss history. Due to the complexity of the network in order to log the history more memory is needed, which means lowering sample number, which in return would dampen the training efficiency. Unfortunately we cannot use it due to resource deficiency.
