@@ -69,13 +69,13 @@ model_path = r"D:\proj\model_separated"
 loaded_model = load_model(model_path)
 
 #Path to test_set
-test_path = r"D:\proj\to_train\testfolder\testset"
+test_path = r"F:\final_submission\code\results\test_dataset"
 
 images = read_and_normalize_images(folder_path=test_path)
-visualize_predictions_outside(loaded_model,images)
+#visualize_predictions_outside(loaded_model,images)
 
 #Save the predictions to a folder
-save_path = r"D:\proj\to_train\testfolder\testset\test_pred"
+save_path = r"F:\final_submission\code\results\test_dataset\final_results"
 if not os.path.exists(save_path):
         os.makedirs(save_path)
 

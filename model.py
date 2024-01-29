@@ -139,7 +139,7 @@ class UNetModel:
         return model
 
     def compile_model(self):
-        self.model.compile(optimizer=self.optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+        self.model.compile(optimizer=self.optimizer, loss='binary_crossentropy', metrics=[self.psnr_metric])
 
     def train(self, X_train, y_train, X_val, y_val, epochs=10, batch_size=5):
         self.model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(X_val, y_val))
@@ -151,6 +151,21 @@ class UNetModel:
         loaded_model = load_model(path)
         self.model.set_weights(loaded_model.get_weights())
         return loaded_model
+
+    @staticmethod
+    def psnr_metric(y_true, y_pred):
+        # Clip pixel values to be in the range [0, 1]
+        y_true = tf.clip_by_value(y_true, 0.0, 1.0)
+        y_pred = tf.clip_by_value(y_pred, 0.0, 1.0)
+
+        # Compute MSE (Mean Squared Error)
+        mse = tf.reduce_mean(tf.square(y_true - y_pred))
+
+        # Compute PSNR
+        max_pixel_value = 1.0
+        psnr = 20 * tf.math.log(max_pixel_value / tf.math.sqrt(mse)) / tf.math.log(10.0)
+
+        return psnr
     def visualize_predictions(self, xv, yv, num):
         """
         Visualizes the input image, ground truth, and model predictions.
